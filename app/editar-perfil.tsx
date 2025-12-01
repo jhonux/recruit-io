@@ -18,7 +18,7 @@ export default function EditarPerfilScreen() {
     const [tipoUsuario, setTipoUsuario] = useState('');
     const [loading, setLoading] = useState(false);
 
-    // Carrega dados atuais ao abrir
+
     useEffect(() => {
         carregarDados();
     }, []);
@@ -71,7 +71,7 @@ export default function EditarPerfilScreen() {
 
                     <View style={styles.form}>
             
-            {/* Seletor de Tipo */}
+     
             <Text style={styles.label}>Tipo de Conta</Text>
             <View style={styles.toggleContainer}>
               <Pressable
@@ -118,7 +118,7 @@ export default function EditarPerfilScreen() {
 
         </ScrollView>
 
-        {/* Botão Salvar */}
+      
         <View style={styles.footer}>
           <TouchableOpacity 
             style={[styles.saveButton, loading && { opacity: 0.7 }]} 
@@ -193,7 +193,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins_400Regular',
     marginLeft: 4,
   },
-  // Estilos do Toggle (Copiados do cadastro para manter padrão)
   toggleContainer: {
     flexDirection: 'row',
     gap: 16,

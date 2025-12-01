@@ -20,13 +20,12 @@ export default function DetalhesVagaScreen() {
   const params = useLocalSearchParams();
   
   const tituloVaga = params.titulo as string;
-  const modo = params.modo as string; // 'candidato' ou undefined (recrutador)
+  const modo = params.modo as string; 
 
   const [perguntas, setPerguntas] = useState<Pergunta[]>([]);
-  const [idsRespondidos, setIdsRespondidos] = useState<string[]>([]); // Lista de IDs já respondidos
+  const [idsRespondidos, setIdsRespondidos] = useState<string[]>([]); 
   const [loading, setLoading] = useState(true);
 
-  // useFocusEffect garante que a lista atualize se ele responder e voltar pra cá
   useFocusEffect(
     useCallback(() => {
       carregarDados();
@@ -37,26 +36,25 @@ export default function DetalhesVagaScreen() {
     try {
       setLoading(true);
       
-      // 1. Busca Perguntas e Respostas em paralelo
       const [todasPerguntas, todasRespostas] = await Promise.all([
         perguntaService.listarTodas(),
         respostaService.listarRespostas()
       ]);
 
-      // 2. Filtra perguntas da vaga atual
+   
       const perguntasDaVaga = todasPerguntas.filter((p: Pergunta) => 
         p.tags && p.tags.includes(tituloVaga)
       );
       setPerguntas(perguntasDaVaga);
 
-      // 3. Se for candidato, descobre quais ele já respondeu
+      
       if (modo === 'candidato') {
         const meuId = await AsyncStorage.getItem('user_id');
         
         if (meuId) {
-          // Filtra respostas que tem o meu usuarioId
+          
           const minhasRespostas = todasRespostas.filter((r: any) => r.usuarioId === meuId);
-          // Cria um array só com os IDs das perguntas
+      
           const ids = minhasRespostas.map((r: any) => r.perguntaId);
           setIdsRespondidos(ids);
         }
@@ -87,14 +85,14 @@ export default function DetalhesVagaScreen() {
   };
 
   const renderItem = ({ item, index }: { item: Pergunta, index: number }) => {
-    // Verifica se esta pergunta específica já foi respondida
+   
     const jaRespondeu = idsRespondidos.includes(item.id);
 
     return (
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <Text style={styles.questionIndex}>PERGUNTA {index + 1}</Text>
-          {/* Badge Visual de Concluído */}
+        
           {jaRespondeu && modo === 'candidato' && (
             <View style={styles.doneBadge}>
               <Text style={styles.doneText}>Concluída</Text>
@@ -105,11 +103,11 @@ export default function DetalhesVagaScreen() {
         
         <Text style={styles.questionText}>{item.texto}</Text>
         
-        {/* --- LÓGICA DO BOTÃO --- */}
+     
         {modo === 'candidato' ? (
           // MODO CANDIDATO
           jaRespondeu ? (
-            // Botão Bloqueado (Já respondeu)
+           
             <TouchableOpacity 
               style={[styles.actionButton, styles.disabledButton]} 
               disabled={true}
@@ -118,7 +116,7 @@ export default function DetalhesVagaScreen() {
               <Ionicons name="checkmark-circle" size={16} color="#888" />
             </TouchableOpacity>
           ) : (
-            // Botão Ativo (Pode responder)
+        
             <TouchableOpacity 
               style={styles.actionButton} 
               onPress={() => irParaResponder(item)}
@@ -236,7 +234,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   
-  // Botões
+
   actionButton: {
     backgroundColor: '#34D399',
     flexDirection: 'row',
@@ -251,22 +249,22 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins_700Bold',
     fontSize: 14,
   },
-  // Estilo Botão Bloqueado
+ 
   disabledButton: {
-    backgroundColor: '#3A3A3C', // Cinza escuro
+    backgroundColor: '#3A3A3C', 
   },
   disabledText: {
     color: '#888',
     fontFamily: 'Poppins_700Bold',
     fontSize: 14,
   },
-  // Estilo Botão Recrutador
+
   recruiterButton: {
     backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: '#34D399',
   },
-  // Badge de Concluído no topo
+
   doneBadge: {
     flexDirection: 'row',
     alignItems: 'center',

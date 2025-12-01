@@ -47,10 +47,8 @@ export default function LoginScreen() {
         >
           <View style={styles.content}>
 
-            {/* Logo e Título */}
+          
             <View style={styles.header}>
-              {/* Se tiver o logo.png, descomente a linha abaixo */}
-              {/* <Image source={require('../../assets/images/logo.png')} style={styles.logo} /> */}
               <Ionicons name="layers" size={64} color="#34D399" style={{ marginBottom: 16 }} />
 
               <Text style={styles.title}>Bem-vindo de volta!</Text>
@@ -74,7 +72,7 @@ export default function LoginScreen() {
                 />
               </View>
 
-              {/* Input Senha */}
+            
               <View style={styles.inputContainer}>
                 <Ionicons name="lock-closed-outline" size={20} color="#888" style={styles.inputIcon} />
                 <TextInput
@@ -98,7 +96,7 @@ export default function LoginScreen() {
                 <Text style={styles.forgotPassword}>Esqueceu a senha?</Text>
               </TouchableOpacity>
 
-              {/* Botão Entrar */}
+            
               <TouchableOpacity
                 style={[styles.loginButton, isLoading && { opacity: 0.7 }]}
                 onPress={handleLogin}
@@ -111,7 +109,7 @@ export default function LoginScreen() {
                 )}
               </TouchableOpacity>
 
-              {/* Link Cadastro */}
+         
               <View style={styles.footer}>
                 <Text style={styles.footerText}>Não tem uma conta? </Text>
                 <Link href="/cadastro" asChild>
@@ -181,7 +179,7 @@ export default function LoginScreen() {
       color: '#FFF',
       fontSize: 16,
       fontFamily: 'Poppins_400Regular',
-      height: '100%', // Garante que o input ocupe a altura do container
+      height: '100%',
     },
     forgotPassword: {
       color: '#34D399',

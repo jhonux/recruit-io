@@ -9,8 +9,8 @@ import { authService } from '../../services/authService';
 export default function CadastroScreen() {
   const router = useRouter();
   
-  // Estados do Formulário
-  const [tipoUsuario, setTipoUsuario] = useState('recrutador'); // 'recrutador' ou 'candidato'
+
+  const [tipoUsuario, setTipoUsuario] = useState('recrutador'); 
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
@@ -19,7 +19,7 @@ export default function CadastroScreen() {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleCadastro = async () => {
-    // 1. Validações Básicas
+ 
     if (!nome || !email || !senha || !confirmarSenha) {
       Alert.alert('Erro', 'Por favor, preencha todos os campos.');
       return;
@@ -33,10 +33,9 @@ export default function CadastroScreen() {
     setIsLoading(true);
 
     try {
-      // 2. Chama o Serviço
+    
       await authService.cadastrar(nome, email, senha, tipoUsuario);
 
-      // 3. Sucesso
       Alert.alert(
         'Conta Criada! 🎉', 
         'Sua conta foi criada com sucesso. Faça login para continuar.',
@@ -64,7 +63,7 @@ export default function CadastroScreen() {
             <Text style={styles.title}>Criar sua conta</Text>
             <Text style={styles.subtitle}>Preencha os campos para começar.</Text>
 
-            {/* Seletor de Tipo de Usuário */}
+         
             <Text style={styles.label}>Eu sou</Text>
             <View style={styles.toggleContainer}>
               <Pressable
@@ -121,7 +120,7 @@ export default function CadastroScreen() {
               onChangeText={setConfirmarSenha}
             />
 
-            {/* Botão Cadastrar */}
+            
             <TouchableOpacity 
               style={[styles.buttonPrimary, isLoading && { opacity: 0.7 }]} 
               onPress={handleCadastro}
@@ -134,7 +133,6 @@ export default function CadastroScreen() {
               )}
             </TouchableOpacity>
             
-            {/* Link para Login */}
             <Link href="/login" asChild>
               <TouchableOpacity>
                 <Text style={styles.loginLink}>Já possui uma conta? Faça login</Text>
@@ -180,7 +178,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     fontFamily: 'Poppins_400Regular',
   },
-  // Toggle (Botões de Seleção)
   toggleContainer: {
     flexDirection: 'row',
     marginBottom: 24,
@@ -200,7 +197,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#2C2C2E',
   },
   toggleText: {
-    color: '#FFF', // Ajuste a cor se necessário para contraste
+    color: '#FFF', 
     fontFamily: 'Poppins_700Bold',
   },
   // Inputs

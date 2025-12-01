@@ -61,7 +61,6 @@ export default function PerfilScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Cabeçalho do Perfil */}
       <View style={styles.header}>
         <View style={styles.avatarContainer}>
             <Text style={styles.avatarText}>{inicial}</Text>
@@ -69,7 +68,7 @@ export default function PerfilScreen() {
         <Text style={styles.userName}>{nome}</Text>
         <Text style={styles.userRole}>{tipo}</Text>
         
-        {/* NOVO BOTÃO DE EDITAR */}
+     
         <TouchableOpacity 
             style={styles.editProfileButton}
             onPress={() => router.push('/editar-perfil')}
@@ -132,7 +131,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#34D399', // Verde Menta
+    backgroundColor: '#34D399', 
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
@@ -189,7 +188,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#EF4444', // Vermelho
+    borderColor: '#EF4444',
     gap: 8,
   },
   logoutText: {

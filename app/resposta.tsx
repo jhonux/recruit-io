@@ -30,7 +30,6 @@ export default function ResponderScreen() {
     setIsLoading(true);
 
     try {
-      // Não precisamos mais passar o 'nome', o serviço pega do Storage
       await respostaService.enviarResposta(perguntaId, resposta);
       
       Alert.alert(
@@ -61,7 +60,6 @@ export default function ResponderScreen() {
             <Text style={styles.headerTitle}>Sua Resposta</Text>
           </View>
 
-          {/* Card da Pergunta */}
           <View style={styles.questionContainer}>
             <View style={styles.iconContainer}>
               <Feather name="help-circle" size={24} color="#1C1C1E" />
@@ -73,7 +71,6 @@ export default function ResponderScreen() {
           </View>
 
           <View style={styles.formContainer}>
-            {/* Campo de Nome REMOVIDO (Automático) */}
 
             <Text style={styles.label}>Sua Solução / Resposta</Text>
             <TextInput

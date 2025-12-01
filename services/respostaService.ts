@@ -35,7 +35,7 @@ export const respostaService = {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ Erro Back-end:', errorText);
+        console.error('Erro Back-end:', errorText);
         throw new Error(`O servidor rejeitou: ${errorText}`);
       }
 
@@ -44,7 +44,7 @@ export const respostaService = {
       return data;
 
     } catch (error) {
-      console.error('❌ Erro no fetch:', error);
+      console.error('Erro no fetch:', error);
       throw error;
     }
   },

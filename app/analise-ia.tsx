@@ -21,20 +21,18 @@ export default function AnaliseIAScreen() {
   }, []);
 
   const verificarDados = async () => {
-    // 1. VERIFICAÇÃO INTELIGENTE
     if (dadosExistentes) {
-      // Se já recebemos os dados prontos da tela anterior, usamos eles!
       try {
         const json = JSON.parse(dadosExistentes as string);
-        setDados({ resultado: json }); // Ajusta estrutura se necessário
+        setDados({ resultado: json }); 
         setLoading(false);
-        return; // Para por aqui, não chama API
+        return; 
       } catch (e) {
         console.error("Erro ao ler dados existentes", e);
       }
     }
 
-    // 2. Se não veio pronto, chama a API (POST)
+
     processarAnalise();
   };
 
@@ -58,8 +56,7 @@ export default function AnaliseIAScreen() {
     return '#EF4444';
   };
 
-  // Se 'dadosExistentes' foi usado, a estrutura pode ser direta ou aninhada em 'resultado'
-  // O backend retorna { resultado: { ... } }, mas se o campo no banco já for o objeto, ajustamos:
+
   const resultado = dados?.resultado || dados; 
   
   const scoreGeral = resultado?.overall || 0;
@@ -77,8 +74,6 @@ export default function AnaliseIAScreen() {
           <Text style={styles.headerTitle}>Relatório do Gemini</Text>
         </View>
 
-        {/* ... (RESTANTE DO JSX IGUAL AO ANTERIOR) ... */}
-        {/* Vou resumir para economizar espaço, mas MANTENHA O MESMO JSX DE ANTES */}
         
         <View style={styles.candidatoCard}>
             <View style={styles.avatar}>
@@ -101,7 +96,7 @@ export default function AnaliseIAScreen() {
                 <Text style={styles.loadingText}>Processando com Gemini...</Text>
                 <Text style={styles.loadingSubText}>Analisando critérios técnicos.</Text>
             </View>
-        ) : resultado ? ( // Verifica se 'resultado' existe
+        ) : resultado ? (
             <View style={styles.resultContainer}>
                 
                 <View style={styles.scoreSection}>
@@ -157,8 +152,6 @@ export default function AnaliseIAScreen() {
   );
 }
 
-// ... MANTENHA OS ESTILOS IGUAIS AO ARQUIVO ANTERIOR ...
-// (Não precisa alterar nada nos styles)
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#1C1C1E' },
   content: { padding: 24, paddingBottom: 50 },

@@ -26,7 +26,7 @@ export default function RespostasPerguntaScreen() {
   const [respostas, setRespostas] = useState<Resposta[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // useFocusEffect para recarregar a lista se você analisou e voltou
+  
   useFocusEffect(
     useCallback(() => {
       carregarRespostas();
@@ -38,7 +38,7 @@ export default function RespostasPerguntaScreen() {
       setLoading(true);
       const todas = await respostaService.listarRespostas();
       
-      // Filtra as respostas desta pergunta
+    
       const filtradas = todas.filter((r: Resposta) => r.perguntaId === perguntaId);
       setRespostas(filtradas);
     } catch (error) {
@@ -49,9 +49,6 @@ export default function RespostasPerguntaScreen() {
   };
 
   const irParaAnalise = (resposta: Resposta) => {
-    // LÓGICA INTELIGENTE:
-    // Se já tem análise, passamos ela via string para a tela (evita novo POST).
-    // Se não tem, passamos null e a tela lá vai fazer o POST.
     
     router.push({
       pathname: '/analise-ia',
@@ -60,14 +57,12 @@ export default function RespostasPerguntaScreen() {
         candidato: resposta.candidato,
         textoResposta: resposta.resposta,
         contextoPergunta: perguntaTexto,
-        // Envia o JSON da análise se existir (transformado em string)
         dadosExistentes: resposta.analise ? JSON.stringify(resposta.analise) : undefined
       }
     });
   };
 
   const renderItem = ({ item }: { item: Resposta }) => {
-    // Verifica se já foi analisado (se o objeto analise existe)
     const jaAnalisado = !!item.analise;
 
     return (
@@ -89,7 +84,7 @@ export default function RespostasPerguntaScreen() {
           {item.resposta}
         </Text>
 
-        {/* BOTÃO QUE MUDA DE COR E TEXTO */}
+       
         <TouchableOpacity 
           style={[
             styles.analyzeButton, 
@@ -236,12 +231,12 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins_700Bold',
     fontSize: 14,
   },
-  // Estilo "Analisar" (Verde, chama atenção)
+  
   buttonCreate: {
     backgroundColor: '#34D399',
   },
-  // Estilo "Ver Resultado" (Azul ou Cinza, secundário)
+  
   buttonView: {
-    backgroundColor: '#3B82F6', // Azul
+    backgroundColor: '#3B82F6', 
   },
 });
