@@ -1,98 +1,270 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, RefreshControl, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Feather } from '@expo/vector-icons';
+import { useRouter, useFocusEffect } from 'expo-router';
+import { useState, useCallback } from 'react';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { perguntaService } from '../../services/perguntaService';
+
+type VagaResumo = {
+  titulo: string;
+  qtdPerguntas: number;
+}
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const router = useRouter();
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  const [vagasRecentes, setVagasRecentes] = useState<VagaResumo[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+
+  const carregarDashboard = async () => {
+    try {
+      setLoading(true);
+      const perguntas = await perguntaService.listarTodas();
+
+      const agrupamento: Record<string, number> = {};
+
+      perguntas.forEach((p: any) => {
+        const tituloVaga = (p.tags && p.tags.length > 0) ? p.tags[0] : 'Geral';
+        if (!agrupamento[tituloVaga]) {
+          agrupamento[tituloVaga] = 0;
+        }
+        agrupamento[tituloVaga] += 1;
+      });
+
+      const lista: VagaResumo[] = Object.keys(agrupamento).map(titulo => ({
+        titulo,
+        qtdPerguntas: agrupamento[titulo]
+      }));
+
+      setVagasRecentes(lista.reverse());
+
+    } catch (error) {
+      console.error('Erro ao carregar dashboard:', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+  
+  useFocusEffect(
+    useCallback(() => {
+      carregarDashboard();
+    }, [])
+  );
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    carregarDashboard();
+  };
+
+  const irParaDetalhes = (titulo: string) => {
+    router.push({
+      pathname: '/detalhes-pergunta', 
+      params: { titulo: titulo }
+    } as any); 
+  };
+
+    return (
+    <SafeAreaView style={styles.container}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#34D399" />
+        }
+      >
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.greeting}>Olá, Recrutador!</Text>
+            <Text style={styles.subGreeting}>Bem-vindo de volta</Text>
+          </View>
+          <View style={styles.profileImagePlaceholder}>
+             <Feather name="user" size={24} color="#FFF" />
+          </View>
+        </View>
+
+       
+        <Text style={styles.sectionTitle}>Seu Resumo</Text>
+        <View style={styles.statsContainer}>
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>Perguntas Criadas</Text>
+            {loading ? (
+              <ActivityIndicator size="small" color="#34D399" />
+            ) : (
+              <Text style={styles.statValue}>{vagasRecentes.length}</Text>
+            )}
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>Respostas Recebidas</Text>
+            <Text style={styles.statValue}>0</Text>
+          </View>
+        </View>
+
+        <Text style={styles.sectionTitle}>Perguntas recentes</Text>
+        
+        {loading && !refreshing ? (
+          <ActivityIndicator color="#34D399" style={{ marginTop: 20 }} />
+        ) : vagasRecentes.length === 0 ? (
+          <Text style={styles.emptyText}>Nenhuma vaga criada ainda.</Text>
+        ) : (
+          vagasRecentes.map((vaga, index) => (
+            <TouchableOpacity 
+              key={index} 
+              style={styles.jobCard}
+              onPress={() => irParaDetalhes(vaga.titulo)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.jobHeader}>
+                <Text style={styles.jobTitle}>{vaga.titulo}</Text>
+              </View>
+              
+              <View style={styles.jobInfo}>
+                <Feather name="list" size={16} color="#888" />
+                <Text style={styles.jobInfoText}>
+                  {vaga.qtdPerguntas} {vaga.qtdPerguntas === 1 ? 'pergunta' : 'perguntas'} cadastradas
+                </Text>
+              </View>
+
+              <View style={styles.verCandidatosButton}>
+                 <Text style={styles.verCandidatosText}>Ver detalhes</Text>
+              </View>
+            </TouchableOpacity>
+          ))
+        )}
+
+      </ScrollView>
+
+      <TouchableOpacity 
+        style={styles.fab} 
+        onPress={() => router.push('/criar-pergunta')}
+      >
+        <Feather name="plus" size={32} color="#1C1C1E" />
+      </TouchableOpacity>
+      
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+    backgroundColor: '#1C1C1E',
+  },
+  scrollContent: {
+    padding: 24,
+    paddingBottom: 100,
+  },
+
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  greeting: {
+    fontSize: 24,
+    fontFamily: 'Poppins_700Bold',
+    color: '#FFF',
+  },
+  subGreeting: {
+    fontSize: 14,
+    fontFamily: 'Poppins_400Regular',
+    color: '#888',
+  },
+  profileImagePlaceholder: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#2C2C2E',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+
+  sectionTitle: {
+    fontSize: 18,
+    fontFamily: 'Poppins_700Bold',
+    color: '#FFF',
+    marginBottom: 16,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    gap: 16,
+    marginBottom: 32,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: '#2C2C2E',
+    padding: 16,
+    borderRadius: 12,
+  },
+  statLabel: {
+    fontSize: 14,
+    color: '#888',
+    fontFamily: 'Poppins_400Regular',
+    marginBottom: 8,
+  },
+  statValue: {
+    fontSize: 32,
+    color: '#FFF',
+    fontFamily: 'Poppins_700Bold',
+  },
+
+  jobCard: {
+    backgroundColor: '#2C2C2E',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: '#34D399',
+  },
+  jobHeader: {
+    marginBottom: 8,
+  },
+  jobTitle: {
+    fontSize: 16,
+    color: '#FFF',
+    fontFamily: 'Poppins_700Bold',
+  },
+  jobInfo: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    marginBottom: 16,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  jobInfoText: {
+    color: '#888',
+    fontSize: 14,
+    fontFamily: 'Poppins_400Regular',
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
+  verCandidatosButton: {
+    backgroundColor: '#34D399',
+    paddingVertical: 8,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  verCandidatosText: {
+    color: '#1C1C1E',
+    fontFamily: 'Poppins_700Bold',
+    fontSize: 14,
+  },
+
+  fab: {
     position: 'absolute',
+    bottom: 24,
+    right: 24,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#34D399',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    elevation: 8,
   },
 });

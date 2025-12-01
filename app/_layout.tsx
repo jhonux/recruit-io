@@ -27,7 +27,14 @@ export default function RootLayout() {
     <Stack>
       <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="criar-pergunta" options={{ headerShown: false}} />
+      <Stack.Screen name="detalhes-pergunta" options={{ headerShown: false }} />
       <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="(candidato)" options={{ headerShown: false }} />
+      <Stack.Screen name="respostas-pergunta" options={{ headerShown: false }} />
+      <Stack.Screen name="resposta" options={{ headerShown: false }} />
+      <Stack.Screen name="analise-ia" options={{ headerShown: false }} />
+      <Stack.Screen name="editar-perfil" options={{ headerShown: false }} />
     </Stack>
   );
 }

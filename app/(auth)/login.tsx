@@ -1,149 +1,218 @@
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image } from 'react-native';
+import React, { useState } from 'react';
+import {
+  View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ActivityIndicator, Image, KeyboardAvoidingView, Platform
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Link, useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter, Link } from 'expo-router';
+import { authService } from '../../services/authService';
 
 export default function LoginScreen() {
-    const router = useRouter();
+  const router = useRouter();
 
-    const handleLogin = () => {
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
+  const handleLogin = async () => {
+    if (!email || !senha) {
+      Alert.alert('Erro', 'Preencha todos os campos');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const usuario = await authService.login(email, senha);
+
+      if (usuario.tipoUsuario === 'RECRUITER') {
         router.replace('/(tabs)');
-    }
+      } else {
+        router.replace('/(candidato)')
+      }
 
-    const handleCreateAccount = () => {
-        router.push('/(auth)/cadastro');
-    }
+      } catch (error) {
+        Alert.alert('Falha no Login', 'Verifique suas credenciais e tente novamente.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     return (
-        <SafeAreaView style={styles.container}>
-            <View style={styles.content}>
-                <Image source={require('../../assets/images/logo1.png')} style={styles.logo} />
+      <SafeAreaView style={styles.container}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1, justifyContent: 'center' }}
+        >
+          <View style={styles.content}>
 
-                <Text style={styles.title}>Bem-vindo ao Recruit.io</Text>
-                <Text style={styles.subtitle}>A sua plataforma de análise de recrutamento</Text>
+            {/* Logo e Título */}
+            <View style={styles.header}>
+              {/* Se tiver o logo.png, descomente a linha abaixo */}
+              {/* <Image source={require('../../assets/images/logo.png')} style={styles.logo} /> */}
+              <Ionicons name="layers" size={64} color="#34D399" style={{ marginBottom: 16 }} />
 
+              <Text style={styles.title}>Bem-vindo de volta!</Text>
+              <Text style={styles.subtitle}>Faça login para gerenciar suas vagas.</Text>
+            </View>
+
+            {/* Inputs */}
+            <View style={styles.form}>
+
+              {/* Input Email */}
+              <View style={styles.inputContainer}>
+                <Ionicons name="mail-outline" size={20} color="#888" style={styles.inputIcon} />
                 <TextInput
-                    style={styles.input}
-                    placeholder="Seu e-mail"
-                    placeholderTextColor="#888"
-                    keyboardType="email-address"
+                  style={styles.input}
+                  placeholder="Seu e-mail"
+                  placeholderTextColor="#666"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  value={email}
+                  onChangeText={setEmail}
                 />
+              </View>
 
+              {/* Input Senha */}
+              <View style={styles.inputContainer}>
+                <Ionicons name="lock-closed-outline" size={20} color="#888" style={styles.inputIcon} />
                 <TextInput
-                    style={styles.input}
-                    placeholder="Sua senha"
-                    placeholderTextColor="#888"
-                    secureTextEntry
+                  style={styles.input}
+                  placeholder="Sua senha"
+                  placeholderTextColor="#666"
+                  secureTextEntry={!showPassword}
+                  value={senha}
+                  onChangeText={setSenha}
                 />
-
-                <Text style={styles.forgotPassword}>Esqueceu sua senha?</Text>
-
-                <TouchableOpacity style={styles.buttonPrimary} onPress={handleLogin}>
-                    <Text style={styles.buttonPrimaryText}>Entrar</Text>
+                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                  <Ionicons
+                    name={showPassword ? "eye-off-outline" : "eye-outline"}
+                    size={20}
+                    color="#888"
+                  />
                 </TouchableOpacity>
+              </View>
 
-                <TouchableOpacity style={styles.buttonCreate} onPress={handleCreateAccount}>
-                    <Text style={styles.buttonCreateText}>Criar conta</Text>
-                </TouchableOpacity>
+              <TouchableOpacity style={{ alignSelf: 'flex-end', marginBottom: 24 }}>
+                <Text style={styles.forgotPassword}>Esqueceu a senha?</Text>
+              </TouchableOpacity>
 
+              {/* Botão Entrar */}
+              <TouchableOpacity
+                style={[styles.loginButton, isLoading && { opacity: 0.7 }]}
+                onPress={handleLogin}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <ActivityIndicator color="#1C1C1E" />
+                ) : (
+                  <Text style={styles.loginButtonText}>Entrar</Text>
+                )}
+              </TouchableOpacity>
+
+              {/* Link Cadastro */}
+              <View style={styles.footer}>
+                <Text style={styles.footerText}>Não tem uma conta? </Text>
+                <Link href="/cadastro" asChild>
+                  <TouchableOpacity>
+                    <Text style={styles.linkText}>Cadastre-se</Text>
+                  </TouchableOpacity>
+                </Link>
+              </View>
 
             </View>
-        </SafeAreaView>
+          </View>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
     );
-}
+  }
 
-const styles = StyleSheet.create({
+  const styles = StyleSheet.create({
     container: {
-        flex: 1,
-        backgroundColor: "#FEFEFE"
+      flex: 1,
+      backgroundColor: '#1C1C1E',
     },
     content: {
-        flex: 1,
-        padding: 24,
-        justifyContent: 'center',
+      padding: 24,
+    },
+    header: {
+      alignItems: 'center',
+      marginBottom: 40,
     },
     logo: {
-        width: 300,
-        height: 100,
-        alignSelf: 'center',
-        marginBottom: 24,
-        resizeMode: 'contain',
+      width: 80,
+      height: 80,
+      resizeMode: 'contain',
+      marginBottom: 16,
     },
     title: {
-        fontSize: 26,
-        fontWeight: 'bold',
-        color: '#32383D',
-        textAlign: 'center',
-        marginBottom: 8,
-        fontFamily: 'Poppins_700Bold'
+      fontSize: 28,
+      fontFamily: 'Poppins_700Bold',
+      color: '#FFF',
+      marginBottom: 8,
+      textAlign: 'center',
     },
     subtitle: {
-        fontSize: 17,
-        color: '#32383D',
-        textAlign: 'center',
-        marginBottom: 32,
-        fontFamily: 'Poppins_400Regular'
+      fontSize: 14,
+      fontFamily: 'Poppins_400Regular',
+      color: '#888',
+      textAlign: 'center',
+    },
+    form: {
+      width: '100%',
+    },
+    inputContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#2C2C2E',
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      height: 56,
+      marginBottom: 16,
+      borderWidth: 1,
+      borderColor: '#3A3A3C',
+    },
+    inputIcon: {
+      marginRight: 12,
     },
     input: {
-        backgroundColor: '#32383D',
-        color: '#32383D',
-        height: 50,
-        borderRadius: 10,
-        fontSize: 16,
-        paddingHorizontal: 19,
-        marginBottom: 16,
-        fontFamily: 'Poppins_400Regular'
+      flex: 1,
+      color: '#FFF',
+      fontSize: 16,
+      fontFamily: 'Poppins_400Regular',
+      height: '100%', // Garante que o input ocupe a altura do container
     },
     forgotPassword: {
-        textAlign: 'right',
-        color: '#34D399', 
-        marginBottom: 24,
-        fontFamily: 'Poppins_400Regular'
+      color: '#34D399',
+      fontSize: 14,
+      fontFamily: 'Poppins_400Regular',
     },
-    buttonPrimary: {
-        backgroundColor: '#34D399', 
-        height: 50,
-        borderRadius: 10,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 16,
+    loginButton: {
+      backgroundColor: '#34D399',
+      height: 56,
+      borderRadius: 12,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: 24,
     },
-    buttonPrimaryText: {
-        color: '#FEFEFE',
-        fontSize: 20,
-        fontWeight: 'medium',
-        fontFamily: 'Poppins_400Regular'
+    loginButtonText: {
+      color: '#1C1C1E',
+      fontSize: 18,
+      fontFamily: 'Poppins_700Bold',
     },
-    separator: {
-        color: '#680c0cff',
-        textAlign: 'center',
-        marginVertical: 16,
+    footer: {
+      flexDirection: 'row',
+      justifyContent: 'center',
     },
-    buttonSecondary: {
-        backgroundColor: '#2C2C2E', // Cinza escuro
-        height: 50,
-        borderRadius: 8,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 16,
+    footerText: {
+      color: '#888',
+      fontSize: 14,
+      fontFamily: 'Poppins_400Regular',
     },
-    buttonSecondaryText: {
-        color: '#FFF',
-        fontSize: 18,
-        fontFamily: 'Poppins_400Regular',
+    linkText: {
+      color: '#34D399',
+      fontSize: 14,
+      fontFamily: 'Poppins_700Bold',
     },
-    buttonCreate: {
-        backgroundColor: '#2C2C2E', // Cinza escuro
-        height: 50,
-        borderRadius: 8,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    buttonCreateText: {
-        color: '#FFF',
-        fontSize: 18,
-        fontWeight: 'medium',
-        fontFamily: 'Poppins_400Regular',
-    },
-
-
-});
+  });

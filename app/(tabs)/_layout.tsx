@@ -1,35 +1,87 @@
 import { Tabs } from 'expo-router';
-import React from 'react';
+import { Ionicons } from '@expo/vector-icons';
+import { StyleSheet } from 'react-native';
 
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+function TabIcon({ name, focused, color }: { name: string, focused: boolean, color: string }) {
+  const iconName = focused ? name : `${name}-outline`;
+
+  return (
+    <Ionicons
+      name={iconName as any}
+      size={24}
+      color={color}
+      style={styles.iconAdjustment}
+    />
+  );
+}
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
-        tabBarButton: HapticTab,
-      }}>
+        tabBarActiveTintColor: '#34D399',
+        tabBarInactiveTintColor: '#888888',
+        tabBarStyle: styles.tabBar,
+        tabBarLabelStyle: styles.tabLabel,
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon name="home" color={color} focused={focused} />
+          ),
         }}
       />
+
       <Tabs.Screen
-        name="explore"
+        name="perguntas"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: 'Perguntas',
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon name="document-text" color={color} focused={focused} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="relatorios"
+        options={{
+          title: 'Relatórios',
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon name="stats-chart" color={color} focused={focused} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="perfil"
+        options={{
+          title: 'Perfil',
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon name="person" color={color} focused={focused} />
+          ),
         }}
       />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  tabBar: {
+    backgroundColor: '#1C1C1E',
+    borderTopColor: '#2C2C2E',
+    height: 90,
+    paddingBottom: 30,
+    paddingTop: 10,
+  },
+  tabLabel: {
+    fontFamily: 'Poppins_400Regular',
+    fontSize: 10,
+  },
+  iconAdjustment: {
+    marginBottom: -3,
+  },
+});
