@@ -69,11 +69,10 @@ export default function ListaVagasScreen() {
       style={styles.card} 
       onPress={() => router.push({
         pathname: '/detalhes-pergunta',
-        params: { titulo: item.titulo } // Passamos o título (Tag)
+        params: { titulo: item.titulo }
       })}
     >
       <View style={styles.cardHeader}>
-        {/* ... conteúdo igual ao anterior ... */}
         <Text style={styles.cardTitle}>{item.titulo}</Text>
         <View style={styles.statusBadge}>
             <Text style={styles.statusText}>Ativa</Text>
@@ -81,7 +80,6 @@ export default function ListaVagasScreen() {
       </View>
       
       <View style={styles.cardFooter}>
-        {/* ... conteúdo igual ao anterior ... */}
         <View style={styles.infoRow}>
             <Feather name="list" size={16} color="#888" />
             <Text style={styles.infoText}>

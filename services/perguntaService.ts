@@ -57,4 +57,23 @@ export const perguntaService = {
             throw error;
         }
     },
+    excluirPergunta: async (id: string) => {
+        console.log("Excluindo pergunta com ID:", id);
+        try {
+            const response = await fetch(`${API_URL}/perguntas/${id}`, {
+                method: 'DELETE',
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(errorText || "Erro ao excluir pergunta");
+            }
+            
+            return true;
+        } catch (error) {
+            console.error('Erro ao excluir pergunta:', error);
+            throw error;
+        }
+    }
+
 };

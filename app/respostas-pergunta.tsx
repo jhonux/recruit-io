@@ -5,15 +5,15 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // <--- IMPORT IMPORTANTE
 import { respostaService } from '../services/respostaService';
 
-// Tipo atualizado para incluir a 'analise' se ela existir
 type Resposta = {
   id: string;
   candidato: string;
   resposta: string;
   perguntaId: string;
-  analise?: any; // <--- CAMPO NOVO (Pode vir null ou objeto)
+  analise?: any;
 };
 
 export default function RespostasPerguntaScreen() {
@@ -26,21 +26,39 @@ export default function RespostasPerguntaScreen() {
   const [respostas, setRespostas] = useState<Resposta[]>([]);
   const [loading, setLoading] = useState(true);
 
-  
+  const [analisesLocais, setAnalisesLocais] = useState<Record<string, any>>({});
+
   useFocusEffect(
     useCallback(() => {
-      carregarRespostas();
+      carregarDados();
     }, [])
   );
 
-  const carregarRespostas = async () => {
+  const carregarDados = async () => {
     try {
       setLoading(true);
-      const todas = await respostaService.listarRespostas();
       
     
+      const todas = await respostaService.listarRespostas();
       const filtradas = todas.filter((r: Resposta) => r.perguntaId === perguntaId);
+      
+     
+      const keys = await AsyncStorage.getAllKeys();
+      const analiseKeys = keys.filter(k => k.startsWith('analise_'));
+      const analisesRaw = await AsyncStorage.multiGet(analiseKeys);
+      
+      const mapaAnalises: Record<string, any> = {};
+      analisesRaw.forEach(([key, value]) => {
+        if (value) {
+          const respostaId = key.replace('analise_', '');
+          const json = JSON.parse(value);
+          mapaAnalises[respostaId] = json;
+        }
+      });
+
+      setAnalisesLocais(mapaAnalises);
       setRespostas(filtradas);
+
     } catch (error) {
       console.error(error);
     } finally {
@@ -48,8 +66,9 @@ export default function RespostasPerguntaScreen() {
     }
   };
 
-  const irParaAnalise = (resposta: Resposta) => {
-    
+  const irParaAnalise = (resposta: Resposta, dadosLocais?: any) => {
+    const dadosParaEnvio = dadosLocais || resposta.analise;
+
     router.push({
       pathname: '/analise-ia',
       params: { 
@@ -57,13 +76,16 @@ export default function RespostasPerguntaScreen() {
         candidato: resposta.candidato,
         textoResposta: resposta.resposta,
         contextoPergunta: perguntaTexto,
-        dadosExistentes: resposta.analise ? JSON.stringify(resposta.analise) : undefined
+        dadosExistentes: dadosParaEnvio ? JSON.stringify(dadosParaEnvio) : undefined
       }
     });
   };
 
   const renderItem = ({ item }: { item: Resposta }) => {
-    const jaAnalisado = !!item.analise;
+    const analiseLocal = analisesLocais[item.id];
+    const jaAnalisado = !!item.analise || !!analiseLocal;
+
+    const dadosFinais = analiseLocal || item.analise;
 
     return (
       <View style={styles.card}>
@@ -73,9 +95,8 @@ export default function RespostasPerguntaScreen() {
           </View>
           <View>
             <Text style={styles.candidatoName}>{item.candidato}</Text>
-            {/* Mostra data ou status */}
-            <Text style={styles.dateText}>
-                {jaAnalisado ? 'Análise concluída' : 'Aguardando análise'}
+            <Text style={[styles.dateText, jaAnalisado && { color: '#34D399' }]}>
+                {jaAnalisado ? 'Análise Disponível' : 'Aguardando análise'}
             </Text>
           </View>
         </View>
@@ -84,13 +105,12 @@ export default function RespostasPerguntaScreen() {
           {item.resposta}
         </Text>
 
-       
         <TouchableOpacity 
           style={[
             styles.analyzeButton, 
             jaAnalisado ? styles.buttonView : styles.buttonCreate
           ]} 
-          onPress={() => irParaAnalise(item)}
+          onPress={() => irParaAnalise(item, dadosFinais)}
         >
           <Ionicons 
             name={jaAnalisado ? "document-text-outline" : "sparkles"} 
@@ -140,103 +160,22 @@ export default function RespostasPerguntaScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#1C1C1E',
-  },
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 24,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#2C2C2E',
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontFamily: 'Poppins_700Bold',
-    color: '#FFF',
-  },
-  headerSubtitle: {
-    fontSize: 12,
-    fontFamily: 'Poppins_400Regular',
-    color: '#888',
-  },
-  listContent: {
-    padding: 24,
-  },
-  emptyText: {
-    color: '#666',
-    marginTop: 16,
-    textAlign: 'center',
-    fontFamily: 'Poppins_400Regular',
-  },
-  card: {
-    backgroundColor: '#2C2C2E',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#34D399',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  avatarText: {
-    color: '#1C1C1E',
-    fontFamily: 'Poppins_700Bold',
-    fontSize: 18,
-  },
-  candidatoName: {
-    color: '#FFF',
-    fontSize: 16,
-    fontFamily: 'Poppins_700Bold',
-  },
-  dateText: {
-    color: '#888',
-    fontSize: 12,
-    fontFamily: 'Poppins_400Regular',
-  },
-  previewText: {
-    color: '#CCC',
-    fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    marginBottom: 16,
-    lineHeight: 20,
-  },
-  // Estilo Base do Botão
-  analyzeButton: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 12,
-    borderRadius: 8,
-    gap: 8,
-  },
-  analyzeButtonText: {
-    fontFamily: 'Poppins_700Bold',
-    fontSize: 14,
-  },
-  
-  buttonCreate: {
-    backgroundColor: '#34D399',
-  },
-  
-  buttonView: {
-    backgroundColor: '#3B82F6', 
-  },
+  container: { flex: 1, backgroundColor: '#1C1C1E' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  header: { flexDirection: 'row', alignItems: 'center', padding: 24, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: '#2C2C2E' },
+  headerTitle: { fontSize: 20, fontFamily: 'Poppins_700Bold', color: '#FFF' },
+  headerSubtitle: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: '#888' },
+  listContent: { padding: 24 },
+  emptyText: { color: '#666', marginTop: 16, textAlign: 'center', fontFamily: 'Poppins_400Regular' },
+  card: { backgroundColor: '#2C2C2E', borderRadius: 16, padding: 16, marginBottom: 16 },
+  cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+  avatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#34D399', justifyContent: 'center', alignItems: 'center', marginRight: 12 },
+  avatarText: { color: '#1C1C1E', fontFamily: 'Poppins_700Bold', fontSize: 18 },
+  candidatoName: { color: '#FFF', fontSize: 16, fontFamily: 'Poppins_700Bold' },
+  dateText: { color: '#888', fontSize: 12, fontFamily: 'Poppins_400Regular' },
+  previewText: { color: '#CCC', fontSize: 14, fontFamily: 'Poppins_400Regular', marginBottom: 16, lineHeight: 20 },
+  analyzeButton: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', padding: 12, borderRadius: 8, gap: 8 },
+  analyzeButtonText: { fontFamily: 'Poppins_700Bold', fontSize: 14 },
+  buttonCreate: { backgroundColor: '#34D399' },
+  buttonView: { backgroundColor: '#3B82F6' },
 });

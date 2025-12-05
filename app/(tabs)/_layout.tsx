@@ -47,11 +47,11 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
-        name="relatorios"
+        name="resultados"
         options={{
-          title: 'Relatórios',
+          title: 'Resultados',
           tabBarIcon: ({ color, focused }) => (
-            <TabIcon name="stats-chart" color={color} focused={focused} />
+            <TabIcon name="podium" color={color} focused={focused} />
           ),
         }}
       />
@@ -65,6 +65,7 @@ export default function TabLayout() {
           ),
         }}
       />
+
     </Tabs>
   );
 }

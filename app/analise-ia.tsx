@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { analiseService } from '../services/analiseService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function AnaliseIAScreen() {
   const router = useRouter();
@@ -24,7 +25,12 @@ export default function AnaliseIAScreen() {
     if (dadosExistentes) {
       try {
         const json = JSON.parse(dadosExistentes as string);
-        setDados({ resultado: json }); 
+       console.log("📦 Dados recebidos (Cache/Nav):", json);
+        if (json.resultado) {
+          setDados(json);
+        } else {
+          setDados({ resultado: json });
+        }
         setLoading(false);
         return; 
       } catch (e) {
@@ -43,6 +49,10 @@ export default function AnaliseIAScreen() {
         contextoPergunta as string
       );
       setDados(resultadoApi);
+
+      if (resultadoApi) {
+        await AsyncStorage.setItem(`analise_${id}`, JSON.stringify(resultadoApi) );
+      }
     } catch (error) {
       Alert.alert('Erro', 'Não foi possível carregar a análise.');
     } finally {

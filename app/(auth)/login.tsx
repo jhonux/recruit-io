@@ -49,16 +49,13 @@ export default function LoginScreen() {
 
           
             <View style={styles.header}>
-              <Ionicons name="layers" size={64} color="#34D399" style={{ marginBottom: 16 }} />
-
-              <Text style={styles.title}>Bem-vindo de volta!</Text>
-              <Text style={styles.subtitle}>Faça login para gerenciar suas vagas.</Text>
+              <Image source={require('../../assets/images/logo2.png')} style={styles.logo} />
+              <Text style={styles.subtitle}>Solução para recrutamento inteligente</Text>
             </View>
-
-            {/* Inputs */}
+            
             <View style={styles.form}>
 
-              {/* Input Email */}
+            
               <View style={styles.inputContainer}>
                 <Ionicons name="mail-outline" size={20} color="#888" style={styles.inputIcon} />
                 <TextInput
@@ -139,10 +136,10 @@ export default function LoginScreen() {
       marginBottom: 40,
     },
     logo: {
-      width: 80,
-      height: 80,
+      width: 500,
+      height: 100,
       resizeMode: 'contain',
-      marginBottom: 16,
+      alignSelf: 'center',
     },
     title: {
       fontSize: 28,

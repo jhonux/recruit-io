@@ -1,7 +1,7 @@
 const API_URL = 'https://recruit-io-backend.vercel.app/api';
 
 export const analiseService = {
-
+  
   analisarResposta: async (respostaId: string, contexto: string) => {
     console.log("🤖 Solicitando análise para:", respostaId);
 
@@ -25,12 +25,12 @@ export const analiseService = {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Erro IA:', errorText);
+        console.error(' Erro IA:', errorText);
         throw new Error('Falha na análise da IA');
       }
 
       const data = await response.json();
-      console.log("✅ Análise concluída:", data);
+      console.log("Análise concluída:", data);
       return data;
 
     } catch (error) {

@@ -35,6 +35,8 @@ export default function RootLayout() {
       <Stack.Screen name="resposta" options={{ headerShown: false }} />
       <Stack.Screen name="analise-ia" options={{ headerShown: false }} />
       <Stack.Screen name="editar-perfil" options={{ headerShown: false }} />
+      <Stack.Screen name="candidatos-ranqueados" options={{ headerShown: false }} />
+      <Stack.Screen name="ranking-tag" options={{ headerShown: false }} />
     </Stack>
   );
 }

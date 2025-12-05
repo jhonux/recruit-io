@@ -5,6 +5,8 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { useState, useCallback } from 'react';
 
 import { perguntaService } from '../../services/perguntaService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { respostaService } from '@/services/respostaService';
 
 type VagaResumo = {
   titulo: string;
@@ -15,6 +17,8 @@ export default function HomeScreen() {
   const router = useRouter();
 
   const [vagasRecentes, setVagasRecentes] = useState<VagaResumo[]>([]);
+  const [totalRespostas, setTotalRespostas] = useState(0);
+  const [nomeUsuario, setNomeUsuario] = useState('Recrutador');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -22,16 +26,29 @@ export default function HomeScreen() {
   const carregarDashboard = async () => {
     try {
       setLoading(true);
+      const meuId = await AsyncStorage.getItem('user_id');
+      const meuNome = await AsyncStorage.getItem('user_name');
       const perguntas = await perguntaService.listarTodas();
 
-      const agrupamento: Record<string, number> = {};
+      const [todasPerguntas, todasRespostas] = await Promise.all([
+        perguntaService.listarTodas(),
+        respostaService.listarRespostas()
+      ]);
 
-      perguntas.forEach((p: any) => {
-        const tituloVaga = (p.tags && p.tags.length > 0) ? p.tags[0] : 'Geral';
-        if (!agrupamento[tituloVaga]) {
-          agrupamento[tituloVaga] = 0;
-        }
-        agrupamento[tituloVaga] += 1;
+      const minhasPerguntas = todasPerguntas.filter((p: any) => p.usuarioId === meuId);
+      
+      const meusIdsDePerguntas = minhasPerguntas.map((p: any) => p.id);
+      const respostasRecebidas = todasRespostas.filter((r: any) => 
+        meusIdsDePerguntas.includes(r.perguntaId)
+      );
+
+      setTotalRespostas(respostasRecebidas.length);
+      
+      const agrupamento: Record<string, number> = {};
+      minhasPerguntas.forEach((p: any) => {
+        const titulo = (p.tags && p.tags.length > 0) ? p.tags[0] : 'Geral';
+        if (!agrupamento[titulo]) agrupamento[titulo] = 0;
+        agrupamento[titulo] += 1;
       });
 
       const lista: VagaResumo[] = Object.keys(agrupamento).map(titulo => ({
@@ -39,7 +56,7 @@ export default function HomeScreen() {
         qtdPerguntas: agrupamento[titulo]
       }));
 
-      setVagasRecentes(lista.reverse());
+      setVagasRecentes(lista);
 
     } catch (error) {
       console.error('Erro ao carregar dashboard:', error);
@@ -77,12 +94,10 @@ export default function HomeScreen() {
       >
         <View style={styles.header}>
           <View>
-            <Text style={styles.greeting}>Olá, Recrutador!</Text>
+            <Text style={styles.greeting}>Olá, {nomeUsuario}</Text>
             <Text style={styles.subGreeting}>Bem-vindo de volta</Text>
           </View>
-          <View style={styles.profileImagePlaceholder}>
-             <Feather name="user" size={24} color="#FFF" />
-          </View>
+          
         </View>
 
        
@@ -93,12 +108,16 @@ export default function HomeScreen() {
             {loading ? (
               <ActivityIndicator size="small" color="#34D399" />
             ) : (
-              <Text style={styles.statValue}>{vagasRecentes.length}</Text>
+              <Text style={styles.statValue}>{vagasRecentes.reduce((acc, curr) => acc + curr.qtdPerguntas, 0)}</Text>
             )}
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statLabel}>Respostas Recebidas</Text>
-            <Text style={styles.statValue}>0</Text>
+            {loading ? (
+              <ActivityIndicator size="small" color="#34D399" />
+            ) : (
+              <Text style={styles.statValue}>{totalRespostas}</Text>
+            )}
           </View>
         </View>
 
@@ -156,7 +175,6 @@ const styles = StyleSheet.create({
     padding: 24,
     paddingBottom: 100,
   },
-
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -181,8 +199,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-
-
   sectionTitle: {
     fontSize: 18,
     fontFamily: 'Poppins_700Bold',
@@ -201,7 +217,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   statLabel: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#888',
     fontFamily: 'Poppins_400Regular',
     marginBottom: 8,
@@ -211,7 +227,12 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontFamily: 'Poppins_700Bold',
   },
-
+  emptyText: {
+    color: '#666',
+    fontFamily: 'Poppins_400Regular',
+    textAlign: 'center',
+    marginTop: 20,
+  },
   jobCard: {
     backgroundColor: '#2C2C2E',
     borderRadius: 12,
@@ -250,7 +271,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins_700Bold',
     fontSize: 14,
   },
-
   fab: {
     position: 'absolute',
     bottom: 24,

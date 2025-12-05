@@ -7,7 +7,18 @@ export const authService = {
     cadastrar: async (nome: string, email: string, senha: string, tipo: string) => {
         try {
 
-            const tipoUsuario = tipo === 'recutador' ? 'RECRUITER' : 'USER';
+            const tipoLimpo = tipo.toLowerCase().trim();
+
+            let tipoParaBackend = 'USER'; 
+
+            if (tipoLimpo === 'recrutador') {
+                tipoParaBackend = 'RECRUITER';
+            }
+
+            
+            console.log("📝 Cadastro - Tipo na Tela:", tipo);
+            console.log("📝 Cadastro - Tipo enviado pro Back:", tipoParaBackend);
+
             const response = await fetch(`${API_URL}/usuarios`, {
                 method: 'POST',
                 headers: {
@@ -17,10 +28,9 @@ export const authService = {
                     nome: nome,
                     email: email,
                     senha: senha,
-                    tipoUsuario: tipoUsuario
+                    tipoUsuario: tipoParaBackend
                 }),
             });
-
             if (!response.ok) {
                 const errorText = await response.text();
                 throw new Error(errorText || 'Erro ao criar conta');
@@ -88,33 +98,33 @@ export const authService = {
 
 
     atualizarUsuario: async (id: string, dados: { nome?: string, email?: string, tipoUsuario?: string }) => {
-    try {
-      console.log("📤 Atualizando usuário:", id, dados);
+        try {
+            console.log("📤 Atualizando usuário:", id, dados);
 
-      const response = await fetch(`${API_URL}/usuarios/${id}`, { 
-        method: 'PUT', // ou PATCH
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(dados),
-      });
+            const response = await fetch(`${API_URL}/usuarios/${id}`, {
+                method: 'PUT', // ou PATCH
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(dados),
+            });
 
-      if (!response.ok) {
-        throw new Error('Erro ao atualizar perfil.');
-      }
+            if (!response.ok) {
+                throw new Error('Erro ao atualizar perfil.');
+            }
 
-      const usuarioAtualizado = await response.json();
+            const usuarioAtualizado = await response.json();
 
-      if (usuarioAtualizado.nome) await AsyncStorage.setItem('user_name', usuarioAtualizado.nome);
-      if (usuarioAtualizado.email) await AsyncStorage.setItem('user_email', usuarioAtualizado.email);
-      if (usuarioAtualizado.tipoUsuario) {
-         await AsyncStorage.setItem('user_type', usuarioAtualizado.tipoUsuario);
-      }
+            if (usuarioAtualizado.nome) await AsyncStorage.setItem('user_name', usuarioAtualizado.nome);
+            if (usuarioAtualizado.email) await AsyncStorage.setItem('user_email', usuarioAtualizado.email);
+            if (usuarioAtualizado.tipoUsuario) {
+                await AsyncStorage.setItem('user_type', usuarioAtualizado.tipoUsuario);
+            }
 
-      return usuarioAtualizado;
-    } catch (error) {
-      console.error('Erro na atualização:', error);
-      throw error;
-    }
-  },
+            return usuarioAtualizado;
+        } catch (error) {
+            console.error('Erro na atualização:', error);
+            throw error;
+        }
+    },
 };
