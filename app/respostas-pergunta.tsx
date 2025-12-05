@@ -5,7 +5,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage'; // <--- IMPORT IMPORTANTE
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { respostaService } from '../services/respostaService';
 
 type Resposta = {

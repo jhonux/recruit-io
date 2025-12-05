@@ -9,11 +9,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { respostaService } from '../services/respostaService';
 
 type CandidatoRankeado = {
-  id: string; // ID da resposta
+  id: string; 
   candidatoNome: string;
   respostaTexto: string;
-  score: number; // 0 se não analisado
-  analiseCompleta?: any; // Para passar pra próxima tela
+  score: number; 
+  analiseCompleta?: any; 
   status: 'analisado' | 'pendente';
 };
 
@@ -37,30 +37,28 @@ export default function CandidatosRanqueadosScreen() {
     try {
       setLoading(true);
       
-      // 1. Busca todas as respostas do backend
       const todasRespostas = await respostaService.listarRespostas();
       const respostasDaPergunta = todasRespostas.filter((r: any) => r.perguntaId === perguntaId);
 
-      // 2. Busca os caches de análise para essas respostas
-      // Precisamos ler um por um para pegar o score
+    
       const candidatosProcessados: CandidatoRankeado[] = await Promise.all(
         respostasDaPergunta.map(async (r: any) => {
           let score = 0;
           let analiseData = null;
           let status: 'analisado' | 'pendente' = 'pendente';
 
-          // Tenta ler do cache
+      
           const cache = await AsyncStorage.getItem(`analise_${r.id}`);
           
           if (cache) {
             const json = JSON.parse(cache);
-            // Lógica robusta para pegar o score (lidando com estruturas diferentes)
+       
             const dados = json.resultado || json; 
             score = dados.overall || dados.score || 0;
             analiseData = dados;
             status = 'analisado';
           } 
-          // Se o backend trouxer a análise nativamente no futuro:
+        
           else if (r.analise) {
              score = r.analise.score || 0;
              analiseData = r.analise;
@@ -78,8 +76,6 @@ export default function CandidatosRanqueadosScreen() {
         })
       );
 
-      // 3. ORDENAÇÃO (A Mágica)
-      // Maior score primeiro. Se empatar ou for 0, fica por último.
       candidatosProcessados.sort((a, b) => b.score - a.score);
 
       setRanking(candidatosProcessados);
