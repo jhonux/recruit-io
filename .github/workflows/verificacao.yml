@@ -32,4 +32,4 @@ jobs:
 
  
       - name: Teste de Prebuild
-        run: npx expo prebuild --platform android --no-interactive
+        run: npx expo prebuild --platform android
