@@ -1,0 +1,31 @@
+name: Deploy Automático (OTA Update)
+
+on:
+  push:
+    branches:
+      - main 
+
+jobs:
+  update:
+    name: EAS Update
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🏗 Setup do Repositório
+        uses: actions/checkout@v4
+
+      - name: 🏗 Setup do Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: 📦 Instalar EAS CLI
+        run: npm install -g eas-cli
+
+      - name: 📦 Instalar Dependências
+        run: npm install
+
+      - name: 🚀 Publicar Atualização (Preview)
+        run: eas update --branch preview --message "${{ github.event.head_commit.message }}"
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
