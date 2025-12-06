@@ -36,30 +36,27 @@
 ---
 
 ## 🖼 Telas do aplicativo
+
 ### 👨‍💼 Visão do Recrutador
 
-|                           Login                          |                           Cadastro                          |                  Dashboard                          |
+|                           Login                          |                           Cadastro                          |                           Dashboard                          |
 | :------------------------------------------------------: | :---------------------------------------------------------: | :----------------------------------------------------------: |
 | <img src="./assets/screenshots/login.png" width="200" /> | <img src="./assets/screenshots/cadastro.png" width="200" /> | <img src="./assets/screenshots/dashboard.png" width="200" /> |
 
-| Criar Pergunta |  Minhas Perguntas | Perguntas por Tag |
-| :-------------: | :-------------: | :-------------: |
-| <img src="./assets/screenshots/criar-pergunta.png" width="200" /> |  <img src="./assets/screenshots/perguntas.png" width="200" /> | <img src="./assets/screenshots/perguntas-tag.png" width="200" /> |
+|                           Criar Pergunta                          |                           Ranking                          |                       Minhas Perguntas                       |
+| :---------------------------------------------------------------: | :--------------------------------------------------------: | :----------------------------------------------------------: |
+| <img src="./assets/screenshots/criar-pergunta.png" width="200" /> | <img src="./assets/screenshots/ranking.png" width="200" /> | <img src="./assets/screenshots/perguntas.png" width="200" /> |
 
+|                           Resultados                          |                           Relatório Gemini                          |  —  |
+| :-----------------------------------------------------------: | :-----------------------------------------------------------------: | :-: |
+| <img src="./assets/screenshots/resultados.png" width="200" /> | <img src="./assets/screenshots/relatorio-gemini.png" width="200" /> |  —  |
 
-| Analisar Resposta  |    Relatório Gemini  |      Resultados    |
-| :------------------: | :--------------------: | :-------------------:|
-| <img src="./assets/screenshots/analisar.png" width="200" /> | <img src="./assets/screenshots/relatorio-gemini.png" width="200" /> | <img src="./assets/screenshots/resultados.png" width="200" /> |
 ---
-
-| Ranking   |
-| :------------------: | 
-| <img src="./assets/screenshots/ranking.png" width="200" /> |
 
 ### 👤 Visão do Candidato
 
-|    Candidato   |        Desempenho        |            Resposta            |
-| :--------------: | :----------: | :-----------------------: |
+|                           Candidato                          |                           Desempenho                          |                           Resposta                          |
+| :----------------------------------------------------------: | :-----------------------------------------------------------: | :---------------------------------------------------------: |
 | <img src="./assets/screenshots/candidato.png" width="200" /> | <img src="./assets/screenshots/desempenho.png" width="200" /> | <img src="./assets/screenshots/resposta.png" width="200" /> |
 
 ---
