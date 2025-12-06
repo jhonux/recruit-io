@@ -28,6 +28,9 @@ export default function HomeScreen() {
       setLoading(true);
       const meuId = await AsyncStorage.getItem('user_id');
       const meuNome = await AsyncStorage.getItem('user_name');
+      if (meuNome) {
+        setNomeUsuario(meuNome.split(' ')[0]);
+      }
       const perguntas = await perguntaService.listarTodas();
 
       const [todasPerguntas, todasRespostas] = await Promise.all([
@@ -96,6 +99,9 @@ export default function HomeScreen() {
           <View>
             <Text style={styles.greeting}>Olá, {nomeUsuario}</Text>
             <Text style={styles.subGreeting}>Bem-vindo de volta</Text>
+          </View>
+          <View style={styles.profileImagePlaceholder}>
+            <Feather name="user" size={24} color="#888" />
           </View>
           
         </View>
