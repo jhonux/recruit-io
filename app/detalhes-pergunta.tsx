@@ -23,7 +23,8 @@ export default function DetalhesVagaScreen() {
   const modo = params.modo as string; 
 
   const [perguntas, setPerguntas] = useState<Pergunta[]>([]);
-  const [idsRespondidos, setIdsRespondidos] = useState<string[]>([]); 
+  const [analisesPorPergunta, setAnalisesPorPergunta] = useState<Record<string, any>>({});
+  const [respostasPorPergunta, setRespostasPorPergunta] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
 
   useFocusEffect(
@@ -48,10 +49,36 @@ export default function DetalhesVagaScreen() {
 
       if (modo === 'candidato') {
         const meuId = await AsyncStorage.getItem('user_id');
+        
         if (meuId) {
           const minhasRespostas = todasRespostas.filter((r: any) => r.usuarioId === meuId);
-          const ids = minhasRespostas.map((r: any) => r.perguntaId);
-          setIdsRespondidos(ids);
+          
+          const allKeys = await AsyncStorage.getAllKeys();
+          const analiseKeys = allKeys.filter(k => k.startsWith('analise_'));
+          const analisesRaw = await AsyncStorage.multiGet(analiseKeys);
+          const mapaCache: Record<string, any> = {};
+          analisesRaw.forEach(([key, value]) => {
+             if (value) mapaCache[key.replace('analise_', '')] = JSON.parse(value);
+          });
+
+          const mapAnalises: Record<string, any> = {};
+          const mapRespostas: Record<string, any> = {};
+          
+          minhasRespostas.forEach((r: any) => {
+             mapRespostas[r.perguntaId] = r;
+
+             const cache = mapaCache[r.id];
+             const dados = cache?.resultado || cache || r.analise;
+             
+             if (dados) {
+                mapAnalises[r.perguntaId] = dados;
+             } else {
+                mapAnalises[r.perguntaId] = { pending: true };
+             }
+          });
+
+          setAnalisesPorPergunta(mapAnalises);
+          setRespostasPorPergunta(mapRespostas);
         }
       }
 
@@ -63,76 +90,67 @@ export default function DetalhesVagaScreen() {
   };
 
   const handleExcluir = async (id: string) => {
-    if (modo === 'candidato') return;
-
-    try {
-      const todasRespostas = await respostaService.listarRespostas();
-      const temResposta = todasRespostas.some((r: any) => r.perguntaId === id);
-
-      if (temResposta) {
-        Alert.alert(
-          "Ação Bloqueada", 
-          "Esta pergunta já foi respondida por candidatos e não pode ser excluída para preservar o histórico."
-        );
-        return;
-      }
-
-      Alert.alert(
-        "Excluir Pergunta",
-        "Tem certeza que deseja remover esta pergunta?",
-        [
-          { text: "Cancelar", style: "cancel" },
-          { 
-            text: "Excluir", 
-            style: "destructive",
-            onPress: async () => {
-              try {
-                await perguntaService.excluirPergunta(id);
-                setPerguntas(prev => prev.filter(p => p.id !== id));
-                Alert.alert("Sucesso", "Pergunta removida.");
-              } catch (error) {
-                Alert.alert("Erro", "Não foi possível excluir.");
-              }
-            }
-          }
-        ]
-      );
-
-    } catch (error) {
-      Alert.alert("Erro", "Falha ao verificar respostas vinculadas.");
-    }
+      if (modo === 'candidato') return;
+      Alert.alert("Ação", "Deseja excluir?", [
+          { text: "Cancelar" },
+          { text: "Sim", onPress: async () => { await perguntaService.excluirPergunta(id); carregarDados(); } }
+      ]);
   };
 
-  const irParaResponder = (pergunta: Pergunta) => {
+  const irParaResponder = (p: Pergunta) => {
     router.push({
       pathname: '/resposta',
-      params: { id: pergunta.id, texto: pergunta.texto }
+      params: { id: p.id, texto: p.texto }
     });
   };
 
-  const irParaVerRespostas = (pergunta: Pergunta) => {
+  const irParaVerRespostas = (p: Pergunta) => {
     router.push({
       pathname: '/respostas-pergunta',
-      params: { id: pergunta.id, texto: pergunta.texto }
+      params: { id: p.id, texto: p.texto }
     } as any);
   };
 
+  const irParaDetalhesAnalise = (p: Pergunta, analiseData: any, respostaData: any) => {
+    router.push({
+        pathname: '/analise-ia',
+        params: {
+            id: respostaData.id,
+            candidato: respostaData.candidato, 
+            textoResposta: respostaData.resposta,
+            contextoPergunta: p.texto,
+            dadosExistentes: JSON.stringify(analiseData) 
+        }
+    });
+  };
+
+  const getBarColor = (s: number) => {
+    if (s >= 80) return '#34D399';
+    if (s >= 50) return '#FBBF24';
+    return '#EF4444';
+  };
+
   const renderItem = ({ item, index }: { item: Pergunta, index: number }) => {
-    const jaRespondeu = idsRespondidos.includes(item.id);
+    const dadosAnalise = analisesPorPergunta[item.id];
+    const dadosResposta = respostasPorPergunta[item.id];
+    
+    const jaRespondeu = !!dadosAnalise;
+    const temNota = jaRespondeu && !dadosAnalise.pending;
+    
+    const score = temNota ? (dadosAnalise.overall || dadosAnalise.score || 0) : 0;
 
     return (
       <TouchableOpacity 
         style={styles.card}
         activeOpacity={0.9}
-        onLongPress={() => handleExcluir(item.id)}
-        delayLongPress={500}
+        onLongPress={() => modo !== 'candidato' && handleExcluir(item.id)}
       >
         <View style={styles.cardHeader}>
           <Text style={styles.questionIndex}>PERGUNTA {index + 1}</Text>
           
           {jaRespondeu && modo === 'candidato' && (
             <View style={styles.doneBadge}>
-              <Text style={styles.doneText}>Concluída</Text>
+              <Text style={styles.doneText}>Enviada</Text>
               <Ionicons name="checkmark" size={12} color="#FFF" />
             </View>
           )}
@@ -142,13 +160,32 @@ export default function DetalhesVagaScreen() {
         
         {modo === 'candidato' ? (
           jaRespondeu ? (
-            <TouchableOpacity 
-              style={[styles.actionButton, styles.disabledButton]} 
-              disabled={true}
-            >
-              <Text style={styles.disabledText}>Resposta Enviada</Text>
-              <Ionicons name="checkmark-circle" size={16} color="#888" />
-            </TouchableOpacity>
+            temNota ? (
+               <TouchableOpacity 
+                 style={styles.scoreContainer}
+                 onPress={() => irParaDetalhesAnalise(item, dadosAnalise, dadosResposta)}
+               >
+                  <View style={styles.scoreHeader}>
+                    <Text style={styles.aderenciaLabel}>Sua Aderência</Text>
+                    <View style={styles.clickHint}>
+                        <Text style={styles.clickHintText}>Ver análise</Text>
+                        <Ionicons name="chevron-forward" size={12} color="#888" />
+                    </View>
+                  </View>
+                  
+                  <View style={styles.barContainer}>
+                      <View style={styles.barTrack}>
+                          <View style={[styles.barFill, { width: `${score}%`, backgroundColor: getBarColor(score) }]} />
+                      </View>
+                      <Text style={[styles.scoreValue, { color: getBarColor(score) }]}>{score}%</Text>
+                  </View>
+               </TouchableOpacity>
+            ) : (
+               <View style={styles.pendingBox}>
+                   <Ionicons name="time-outline" size={16} color="#888" />
+                   <Text style={styles.pendingText}>Análise da IA em andamento...</Text>
+               </View>
+            )
           ) : (
             <TouchableOpacity 
               style={styles.actionButton} 
@@ -180,24 +217,20 @@ export default function DetalhesVagaScreen() {
         <View style={{flex: 1}}>
             <Text style={styles.headerTitle}>{tituloVaga}</Text>
             <Text style={styles.headerSubtitle}>
-                {modo === 'candidato' ? 'Complete as etapas abaixo' : 'Gerencie as perguntas'}
+                {modo === 'candidato' ? 'Acompanhe seu desempenho' : 'Gerencie as perguntas'}
             </Text>
         </View>
       </View>
 
       {loading ? (
-        <View style={styles.center}>
-            <ActivityIndicator size="large" color="#34D399" />
-        </View>
+        <View style={styles.center}><ActivityIndicator size="large" color="#34D399" /></View>
       ) : (
         <FlatList
           data={perguntas}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
-          ListEmptyComponent={
-            <Text style={styles.emptyText}>Nenhuma pergunta encontrada.</Text>
-          }
+          ListEmptyComponent={<Text style={styles.emptyText}>Nenhuma pergunta encontrada.</Text>}
         />
       )}
     </SafeAreaView>
@@ -211,7 +244,7 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 18, fontFamily: 'Poppins_700Bold', color: '#FFF' },
   headerSubtitle: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: '#888' },
   listContent: { padding: 24, paddingTop: 0 },
-  emptyText: { color: '#666', textAlign: 'center', marginTop: 50, fontFamily: 'Poppins_400Regular' },
+  emptyText: { color: '#666', textAlign: 'center', marginTop: 50 },
   card: { backgroundColor: '#2C2C2E', borderRadius: 12, padding: 16, marginBottom: 16 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
   questionIndex: { color: '#34D399', fontSize: 12, fontFamily: 'Poppins_700Bold', letterSpacing: 1 },
@@ -222,5 +255,16 @@ const styles = StyleSheet.create({
   disabledText: { color: '#888', fontFamily: 'Poppins_700Bold', fontSize: 14 },
   recruiterButton: { backgroundColor: 'transparent', borderWidth: 1, borderColor: '#34D399' },
   doneBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#34D399', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10, gap: 4 },
-  doneText: { color: '#FFF', fontSize: 10, fontFamily: 'Poppins_700Bold' }
+  doneText: { color: '#FFF', fontSize: 10, fontFamily: 'Poppins_700Bold' },
+  scoreContainer: { marginTop: 4, padding: 8, backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: 8 },
+  scoreHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
+  clickHint: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  clickHintText: { color: '#888', fontSize: 10, fontFamily: 'Poppins_400Regular' },
+  aderenciaLabel: { color: '#CCC', fontSize: 12, fontFamily: 'Poppins_700Bold' },
+  barContainer: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  barTrack: { flex: 1, height: 8, backgroundColor: '#444', borderRadius: 4, overflow: 'hidden' },
+  barFill: { height: '100%', borderRadius: 4 },
+  scoreValue: { fontSize: 14, fontFamily: 'Poppins_700Bold', minWidth: 35, textAlign: 'right' },
+  pendingBox: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 8, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 8 },
+  pendingText: { color: '#888', fontSize: 12, fontFamily: 'Poppins_400Regular' }
 });

@@ -1,11 +1,12 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { 
-  View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl 
+import React, { useState, useCallback } from 'react';
+import {
+  View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { perguntaService } from '../../services/perguntaService'; 
+import { perguntaService } from '../../services/perguntaService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type VagaAgrupada = {
   titulo: string;
@@ -15,7 +16,7 @@ type VagaAgrupada = {
 
 export default function ListaVagasScreen() {
   const router = useRouter();
-  
+
   const [vagas, setVagas] = useState<VagaAgrupada[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -23,23 +24,25 @@ export default function ListaVagasScreen() {
   const carregarVagas = async () => {
     try {
       setLoading(true);
-      const perguntas = await perguntaService.listarTodas();
+      const meuId = await AsyncStorage.getItem('user_id');
 
+      const todasPerguntas = await perguntaService.listarTodas();
 
-      const agrupamento: Record<string, number> = {};
-
-      perguntas.forEach((p: any) => {
-        const tituloVaga = (p.tags && p.tags.length > 0) ? p.tags[0] : 'Sem Título';
-        
-        if (!agrupamento[tituloVaga]) {
-          agrupamento[tituloVaga] = 0;
-        }
-        agrupamento[tituloVaga] += 1; 
+      const minhasPerguntas = todasPerguntas.filter((p: any) => {
+        return p.usuarioId === meuId;
       });
 
-      const listaVagas: VagaAgrupada[] = Object.keys(agrupamento).map(titulo => ({
+      const mapaVagas = new Map<string, number>();
+
+      minhasPerguntas.forEach((p: any) => {
+        const titulo = (p.tags && p.tags.length > 0) ? p.tags[0] : 'Geral';
+        const qtdAtual = mapaVagas.get(titulo) || 0;
+        mapaVagas.set(titulo, qtdAtual + 1);
+      });
+
+      const listaVagas: VagaAgrupada[] = [...mapaVagas].map(([titulo, qtd]) => ({
         titulo,
-        qtdPerguntas: agrupamento[titulo],
+        qtdPerguntas: qtd,
         tags: [titulo]
       }));
 
@@ -65,8 +68,8 @@ export default function ListaVagasScreen() {
   };
 
   const renderItem = ({ item }: { item: VagaAgrupada }) => (
-    <TouchableOpacity 
-      style={styles.card} 
+    <TouchableOpacity
+      style={styles.card}
       onPress={() => router.push({
         pathname: '/detalhes-pergunta',
         params: { titulo: item.titulo }
@@ -75,20 +78,20 @@ export default function ListaVagasScreen() {
       <View style={styles.cardHeader}>
         <Text style={styles.cardTitle}>{item.titulo}</Text>
         <View style={styles.statusBadge}>
-            <Text style={styles.statusText}>Ativa</Text>
+          <Text style={styles.statusText}>Ativa</Text>
         </View>
       </View>
-      
+
       <View style={styles.cardFooter}>
         <View style={styles.infoRow}>
-            <Feather name="list" size={16} color="#888" />
-            <Text style={styles.infoText}>
-              {item.qtdPerguntas} {item.qtdPerguntas === 1 ? 'pergunta' : 'perguntas'}
-            </Text>
+          <Feather name="list" size={16} color="#888" />
+          <Text style={styles.infoText}>
+            {item.qtdPerguntas} {item.qtdPerguntas === 1 ? 'pergunta' : 'perguntas'}
+          </Text>
         </View>
-        
+
         <View style={styles.arrowButton}>
-            <Ionicons name="chevron-forward" size={20} color="#34D399" />
+          <Ionicons name="chevron-forward" size={20} color="#34D399" />
         </View>
       </View>
     </TouchableOpacity>
@@ -96,7 +99,7 @@ export default function ListaVagasScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      
+
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Minhas Perguntas</Text>
         <Text style={styles.headerSubtitle}>Gerencie suas perguntas aqui!</Text>
@@ -104,12 +107,12 @@ export default function ListaVagasScreen() {
 
       {loading && !refreshing ? (
         <View style={styles.center}>
-            <ActivityIndicator size="large" color="#34D399" />
+          <ActivityIndicator size="large" color="#34D399" />
         </View>
       ) : (
         <FlatList
           data={vagas}
-          keyExtractor={(item) => item.titulo} 
+          keyExtractor={(item) => item.titulo}
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
@@ -117,13 +120,13 @@ export default function ListaVagasScreen() {
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#34D399" />
           }
           ListEmptyComponent={
-              <Text style={styles.emptyText}>Nenhuma vaga encontrada. Crie a primeira!</Text>
+            <Text style={styles.emptyText}>{loading ? "Carregando..." : "Nenhuma vaga encontrada. Crie a primeira!"}</Text>
           }
         />
       )}
 
-      <TouchableOpacity 
-        style={styles.fab} 
+      <TouchableOpacity
+        style={styles.fab}
         onPress={() => router.push('/criar-pergunta')}
       >
         <Ionicons name="add" size={32} color="#1C1C1E" />

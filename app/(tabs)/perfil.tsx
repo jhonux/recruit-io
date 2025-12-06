@@ -77,7 +77,7 @@ export default function PerfilScreen() {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.menuContainer}>
+      {/* <View style={styles.menuContainer}>
         
         <TouchableOpacity style={styles.menuItem}>
             <View style={styles.menuIcon}>
@@ -103,7 +103,7 @@ export default function PerfilScreen() {
             <Ionicons name="chevron-forward" size={20} color="#666" />
         </TouchableOpacity>
 
-      </View>
+      </View> */}
 
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
         <Ionicons name="log-out-outline" size={24} color="#EF4444" />

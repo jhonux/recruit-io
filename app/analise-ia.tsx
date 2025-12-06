@@ -16,29 +16,33 @@ export default function AnaliseIAScreen() {
   
   const [loading, setLoading] = useState(true);
   const [dados, setDados] = useState<any>(null);
+  const [userType, setUserType] = useState('');
 
   useEffect(() => {
+    checkUserType();
     verificarDados();
   }, []);
+
+  const checkUserType = async () => {
+    const type = await AsyncStorage.getItem('user_type');
+    setUserType(type || 'USER');
+  };
 
   const verificarDados = async () => {
     if (dadosExistentes) {
       try {
         const json = JSON.parse(dadosExistentes as string);
-       console.log("📦 Dados recebidos (Cache/Nav):", json);
         if (json.resultado) {
-          setDados(json);
+            setDados(json); 
         } else {
-          setDados({ resultado: json });
+            setDados({ resultado: json });
         }
         setLoading(false);
         return; 
       } catch (e) {
-        console.error("Erro ao ler dados existentes", e);
+        console.error("Erro cache", e);
       }
     }
-
-
     processarAnalise();
   };
 
@@ -51,7 +55,7 @@ export default function AnaliseIAScreen() {
       setDados(resultadoApi);
 
       if (resultadoApi) {
-        await AsyncStorage.setItem(`analise_${id}`, JSON.stringify(resultadoApi) );
+        await AsyncStorage.setItem(`analise_${id}`, JSON.stringify(resultadoApi));
       }
     } catch (error) {
       Alert.alert('Erro', 'Não foi possível carregar a análise.');
@@ -66,10 +70,8 @@ export default function AnaliseIAScreen() {
     return '#EF4444';
   };
 
-
-  const resultado = dados?.resultado || dados; 
-  
-  const scoreGeral = resultado?.overall || 0;
+  const resultado = dados?.resultado?.resultado || dados?.resultado || dados; 
+  const scoreGeral = resultado?.overall || resultado?.score || 0;
   const notasDetalhadas = resultado?.scores || {};
   const observacoes = resultado?.notes || [];
 
@@ -84,7 +86,6 @@ export default function AnaliseIAScreen() {
           <Text style={styles.headerTitle}>Relatório do Gemini</Text>
         </View>
 
-        
         <View style={styles.candidatoCard}>
             <View style={styles.avatar}>
                 <Text style={styles.avatarText}>{(candidato as string)?.[0]?.toUpperCase()}</Text>
@@ -145,12 +146,38 @@ export default function AnaliseIAScreen() {
                     ))}
                 </View>
 
-                <View style={styles.conclusionBox}>
-                    <Text style={styles.conclusionLabel}>CONCLUSÃO</Text>
-                    <Text style={styles.conclusionText}>
-                        {resultado.conclusao || resultado.analise || "Análise concluída."}
-                    </Text>
-                </View>
+               
+                {scoreGeral < 80 && (
+                    <View style={styles.rejectionCard}>
+                        <View style={styles.cardHeader}>
+                            <Ionicons name="close-circle" size={24} color="#EF4444" />
+                            <Text style={styles.rejectionTitle}>Aderência Insuficiente</Text>
+                        </View>
+                        <Text style={styles.rejectionText}>
+                            {userType === 'RECRUITER' 
+                                ? `O candidato atingiu ${scoreGeral.toFixed(0)}%. A média desejada é de 80%. Recomenda-se avaliar outros perfis.`
+                                : `Sua resposta atingiu ${scoreGeral.toFixed(0)}%, mas a média desejada é de 80%. Continue estudando para melhorar!`
+                            }
+                        </Text>
+                    </View>
+                )}
+
+              
+                {scoreGeral >= 80 && (
+                    <View style={styles.successCard}>
+                        <View style={styles.cardHeader}>
+                            <Ionicons name="checkmark-circle" size={24} color="#34D399" />
+                            <Text style={styles.successTitle}>Candidato Aderente!</Text>
+                        </View>
+                        <Text style={styles.successText}>
+                            {userType === 'RECRUITER' 
+                                ? `Excelente desempenho! O candidato atingiu ${scoreGeral.toFixed(0)}% de aderência. Recomendamos agendar a entrevista técnica.`
+                                : `Parabéns! Sua aderência foi de ${scoreGeral.toFixed(0)}%. Você avançou para a próxima etapa. Nossa equipe entrará em contato.`
+                            }
+                        </Text>
+                    </View>
+                )}
+
 
             </View>
         ) : (
@@ -196,5 +223,14 @@ const styles = StyleSheet.create({
   conclusionBox: { marginTop: 16, padding: 16, backgroundColor: '#252525', borderRadius: 12 },
   conclusionLabel: { color: '#888', fontSize: 10, fontFamily: 'Poppins_700Bold', marginBottom: 8 },
   conclusionText: { color: '#FFF', fontSize: 14, fontFamily: 'Poppins_400Regular', lineHeight: 22 },
-  errorText: { color: '#EF4444', textAlign: 'center' }
+  errorText: { color: '#EF4444', textAlign: 'center' },
+  
+  // Cards de Status
+  rejectionCard: { backgroundColor: 'rgba(239, 68, 68, 0.1)', borderRadius: 12, padding: 16, borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.3)' },
+  rejectionTitle: { color: '#EF4444', fontSize: 16, fontFamily: 'Poppins_700Bold' },
+  rejectionText: { color: '#FFCCCC', fontSize: 14, fontFamily: 'Poppins_400Regular', lineHeight: 20 },
+
+  successCard: { backgroundColor: 'rgba(52, 211, 153, 0.1)', borderRadius: 12, padding: 16, borderWidth: 1, borderColor: 'rgba(52, 211, 153, 0.3)' },
+  successTitle: { color: '#34D399', fontSize: 16, fontFamily: 'Poppins_700Bold' },
+  successText: { color: '#D1FAE5', fontSize: 14, fontFamily: 'Poppins_400Regular', lineHeight: 20 },
 });

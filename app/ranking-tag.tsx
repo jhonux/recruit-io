@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator 
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, Feather } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { perguntaService } from '../services/perguntaService';
@@ -16,6 +16,7 @@ type CandidatoRankeado = {
   resposta: string;
   analiseData: any;
   perguntaTexto: string;
+  perguntaIndex: number;
 };
 
 export default function RankingTagScreen() {
@@ -44,30 +45,32 @@ export default function RankingTagScreen() {
         p.usuarioId === meuId && p.tags && p.tags.includes(tagSelecionada)
       );
       
-      const mapPerguntas: Record<string, string> = {};
-      perguntasDaTag.forEach((p: any) => mapPerguntas[p.id] = p.texto);
+      const mapPerguntas: Record<string, { texto: string, index: number }> = {};
+      
+      perguntasDaTag.forEach((p: any, index: number) => {
+          mapPerguntas[p.id] = { 
+              texto: p.texto, 
+              index: index + 1
+          };
+      });
 
       const respostasDaTag = todasRespostas.filter((r: any) => mapPerguntas[r.perguntaId]);
-
-      const keys = await AsyncStorage.getAllKeys();
-      const analiseKeys = keys.filter(k => k.startsWith('analise_'));
-      const analisesRaw = await AsyncStorage.multiGet(analiseKeys);
-      const mapaCache: Record<string, any> = {};
-      analisesRaw.forEach(([key, value]) => {
-        if (value) mapaCache[key.replace('analise_', '')] = JSON.parse(value);
-      });
 
       const candidatosProcessados = await Promise.all(respostasDaTag.map(async (r: any) => {
         let score = 0;
         let analiseData = null;
 
-        const cache = mapaCache[r.id];
-        const dados = cache?.resultado || cache || r.analise;
+        const cache = await AsyncStorage.getItem(`analise_${r.id}`);
+        const dadosCache = cache ? JSON.parse(cache) : null;
+        
+        const dados = dadosCache?.resultado || dadosCache || r.analise;
 
         if (dados) {
             score = dados.overall || dados.score || 0;
             analiseData = dados;
         }
+
+        const infoPergunta = mapPerguntas[r.perguntaId];
 
         return {
             id: r.id,
@@ -75,7 +78,8 @@ export default function RankingTagScreen() {
             resposta: r.resposta,
             score: Math.round(score),
             analiseData: analiseData,
-            perguntaTexto: mapPerguntas[r.perguntaId]
+            perguntaTexto: infoPergunta.texto,
+            perguntaIndex: infoPergunta.index
         };
       }));
 
@@ -120,9 +124,15 @@ export default function RankingTagScreen() {
       <View style={{ flex: 1 }}>
         <Text style={styles.name}>{item.nome}</Text>
         
+        <View style={styles.questionBadge}>
+            <Text style={styles.questionIndex}>P{item.perguntaIndex}</Text>
+            <Text style={styles.questionPreview} numberOfLines={1}>
+                {item.perguntaTexto}
+            </Text>
+        </View>
+
         <View style={styles.scoreRow}>
             <Text style={styles.aderenciaLabel}>Aderência</Text>
-            
             <View style={styles.barTrack}>
                 <View 
                     style={[
@@ -131,7 +141,6 @@ export default function RankingTagScreen() {
                     ]} 
                 />
             </View>
-            
             <Text style={[styles.scoreText, { color: getScoreColor(item.score) }]}>
                 {item.score}%
             </Text>
@@ -149,7 +158,7 @@ export default function RankingTagScreen() {
              <Ionicons name="arrow-back" size={24} color="#FFF" />
         </TouchableOpacity>
         <View>
-            <Text style={styles.headerTitle}>{tagSelecionada}</Text>
+            <Text style={styles.headerTitle}>Ranking: {tagSelecionada}</Text>
             <Text style={styles.headerSubtitle}>Ordenado por maior pontuação</Text>
         </View>
       </View>
@@ -191,10 +200,22 @@ const styles = StyleSheet.create({
   },
   avatarText: { color: '#1C1C1E', fontFamily: 'Poppins_700Bold', fontSize: 18 },
 
-  name: { fontSize: 16, fontFamily: 'Poppins_700Bold', color: '#FFF', marginBottom: 6 },
+  name: { fontSize: 16, fontFamily: 'Poppins_700Bold', color: '#FFF', marginBottom: 2 },
   
+  questionBadge: {
+    flexDirection: 'row', alignItems: 'center', marginBottom: 8,
+  },
+  questionIndex: {
+    color: '#34D399', fontSize: 10, fontFamily: 'Poppins_700Bold', 
+    backgroundColor: 'rgba(52, 211, 153, 0.1)', paddingHorizontal: 6, paddingVertical: 2,
+    borderRadius: 4, marginRight: 6
+  },
+  questionPreview: {
+    color: '#888', fontSize: 12, fontFamily: 'Poppins_400Regular', flex: 1
+  },
+
   scoreRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  aderenciaLabel: { color: '#888', fontSize: 12, fontFamily: 'Poppins_400Regular' },
+  aderenciaLabel: { color: '#666', fontSize: 10, fontFamily: 'Poppins_400Regular' },
   barTrack: { flex: 1, height: 6, backgroundColor: '#444', borderRadius: 3, overflow: 'hidden' },
   barFill: { height: '100%', borderRadius: 3 },
   scoreText: { fontSize: 12, fontFamily: 'Poppins_700Bold', width: 35, textAlign: 'right' },

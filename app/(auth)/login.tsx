@@ -89,9 +89,9 @@ export default function LoginScreen() {
                 </TouchableOpacity>
               </View>
 
-              <TouchableOpacity style={{ alignSelf: 'flex-end', marginBottom: 24 }}>
+              {/* <TouchableOpacity style={{ alignSelf: 'flex-end', marginBottom: 24 }}>
                 <Text style={styles.forgotPassword}>Esqueceu a senha?</Text>
-              </TouchableOpacity>
+              </TouchableOpacity> */}
 
             
               <TouchableOpacity

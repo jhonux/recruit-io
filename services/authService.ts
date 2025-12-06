@@ -85,7 +85,7 @@ export const authService = {
     },
 
     logout: async () => {
-        await AsyncStorage.clear();
+        await AsyncStorage.multiRemove(['user_id', 'user_name', 'user_email', 'user_type']);
     },
 
     getUserId: async () => {
