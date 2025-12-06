@@ -39,9 +39,9 @@
 
 > As imagens abaixo estão no diretório `./assets/screenshots`.
 
-|                                                   Login / Cadastro                                                   |                     Dashboard Recrutador                     |                        Ranking & IA                        |                      Visão do Candidato                      |
-| :------------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------: | :--------------------------------------------------------: | :----------------------------------------------------------: |
-| <img src="./assets/screenshots/login.png" width="200" /> <img src="./assets/screenshots/cadastro.png" width="200" /> | <img src="./assets/screenshots/dashboard.png" width="200" /> | <img src="./assets/screenshots/ranking.png" width="200" /> | <img src="./assets/screenshots/candidato.png" width="200" /> |
+|      Login |Cadastro                                                   |                     Dashboard Recrutador                     |                        Ranking & IA                        |                      Visão do Candidato                      |
+| :---------------------------------------------------------: | :---------------------------------------------------------: | :----------------------------------------------------------: | :--------------------------------------------------------: | :----------------------------------------------------------: |
+| <img src="./assets/screenshots/login.png" width="200" /> | <img src="./assets/screenshots/cadastro.png" width="200" /> | <img src="./assets/screenshots/dashboard.png" width="200" /> | <img src="./assets/screenshots/ranking.png" width="200" /> | <img src="./assets/screenshots/candidato.png" width="200" /> |
 
 |                       Minhas Perguntas                       |                           Resultados                          |                           Relatório Gemini                          |
 | :----------------------------------------------------------: | :-----------------------------------------------------------: | :-----------------------------------------------------------------: |
