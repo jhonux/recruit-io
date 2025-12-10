@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator 
+  View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, 
+  RefreshControl
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
@@ -26,6 +27,7 @@ export default function RankingTagScreen() {
 
   const [ranking, setRanking] = useState<CandidatoRankeado[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     calcularRanking();
@@ -33,7 +35,7 @@ export default function RankingTagScreen() {
 
   const calcularRanking = async () => {
     try {
-      setLoading(true);
+      if (!refreshing) setLoading(true);
       const meuId = await AsyncStorage.getItem('user_id');
 
       const [todasPerguntas, todasRespostas] = await Promise.all([
@@ -91,8 +93,15 @@ export default function RankingTagScreen() {
       console.error(error);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    calcularRanking();
+  };
+
 
   const irParaAnalise = (item: CandidatoRankeado) => {
     const dados = item.analiseData;
@@ -163,7 +172,7 @@ export default function RankingTagScreen() {
         </View>
       </View>
 
-      {loading ? (
+      {loading && !refreshing ?(
         <View style={styles.center}><ActivityIndicator size="large" color="#34D399" /></View>
       ) : (
         <FlatList
@@ -171,6 +180,13 @@ export default function RankingTagScreen() {
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor="#34D399"
+            />
+          }
           ListEmptyComponent={
             <Text style={styles.emptyText}>Nenhuma resposta para classificar.</Text>
           }
