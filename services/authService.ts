@@ -16,8 +16,8 @@ export const authService = {
             }
 
             
-            console.log("📝 Cadastro - Tipo na Tela:", tipo);
-            console.log("📝 Cadastro - Tipo enviado pro Back:", tipoParaBackend);
+            console.log(" Cadastro - Tipo na Tela:", tipo);
+            console.log(" Cadastro - Tipo enviado pro Back:", tipoParaBackend);
 
             const response = await fetch(`${API_URL}/usuarios`, {
                 method: 'POST',

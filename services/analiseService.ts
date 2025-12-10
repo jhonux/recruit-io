@@ -3,7 +3,7 @@ const API_URL = 'https://recruit-io-backend.vercel.app/api';
 export const analiseService = {
   
   analisarResposta: async (respostaId: string, contexto: string) => {
-    console.log("🤖 Solicitando análise para:", respostaId);
+    console.log("Solicitando análise para:", respostaId);
 
     try {
       const response = await fetch(`${API_URL}/analisar`, {

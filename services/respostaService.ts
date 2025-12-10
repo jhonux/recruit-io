@@ -40,7 +40,7 @@ export const respostaService = {
       }
 
       const data = await response.json();
-      console.log("✅ Sucesso:", data);
+      console.log("Sucesso:", data);
       return data;
 
     } catch (error) {
